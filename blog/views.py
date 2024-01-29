@@ -1,10 +1,12 @@
 from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpResponse
 from .models import Post
 from django.views.generic import (
     ListView, 
     DetailView,
-    CreateView
+    CreateView,
+    UpdateView
     )
 
 # Create your views here.
@@ -26,7 +28,7 @@ class PostDetailView(DetailView):
     model = Post
     
 
-class PostCreateView(CreateView):
+class PostCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Post
     fields = ['title', 'content']
     #success_url = '/post/{post_id}/'
@@ -37,6 +39,15 @@ class PostCreateView(CreateView):
         return super().form_valid(form)
     
     
+class PostUpdateView(LoginRequiredMixin, CreateView):
+    model = Post
+    fields = ['title', 'content']
+    
+    
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
 
 
 def about(request):
