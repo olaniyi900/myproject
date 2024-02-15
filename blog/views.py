@@ -1,6 +1,8 @@
 from django.shortcuts import render
+from django.urls import reverse, reverse_lazy
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from .models import Post
 from django.views.generic import (
     ListView, 
@@ -38,8 +40,26 @@ class PostCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+@login_required
+def post_delete_view(request, pk):
+    post = Post.objects.get(pk=pk)
+    post.delete()
+    return HttpResponseRedirect(reverse('blog-home'))
+
+
+# class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+#     model = Post
+#     success_url = reverse_lazy('blog-home')
     
-    
+#     def text_func(self):
+        
+#         post = self.get_object()
+#         if self.request.user == post.author:
+#             return True
+#         return False
+
+
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     fields = ['title', 'content']
@@ -54,15 +74,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return True
         return False
 
-class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Post
-    success_url = '/'
-    
-    def text_func(self):
-        post = self.get_object()
-        if self.request.user == post.author:
-            return True
-        return False
+
     
 
 def about(request):
